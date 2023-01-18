@@ -45,6 +45,7 @@ public class Main {
                 setSize(850,800);
                 mainPanel.setBounds(0,50,800,800);
                 setContentPane(mainPanel);
+                setLayout(null);
                 setVisible(true);
 
                 mainPanel.add(ordersPanel, "Orders");
@@ -52,20 +53,24 @@ public class Main {
 
                 completeButton.setBounds(100,0,100,25);
                 ordersButton.setBounds(225,0,100,25);
+                add(completeButton);
+                add(ordersButton);
 
                 cardLayout = (CardLayout)(mainPanel.getLayout());
 
                 completeButton.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent actionEvent) {
-                        cardLayout.last(mainPanel);
+                        setContentPane(completePanel);
+                        revalidate();
                     }
                 });
 
                 ordersButton.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent actionEvent) {
-                        cardLayout.first(mainPanel);
+                        cardLayout.first(ordersPanel);
+                        revalidate();
                     }
                 });
             }
@@ -79,7 +84,7 @@ public class Main {
                 OrdersPanel(){
                     super();
                     String[] columName = {"Id", "Компонент", "Цена"};
-                    LinkedList<Orders> date = createElement(requset, typeTable);
+                    LinkedList<Orders> date = createElementOrders(requset, typeTable);
                     String[][] completeDate = new String[date.size()][4];
 
                     for(int i = 0; i < date.size(); i++){
@@ -110,7 +115,7 @@ public class Main {
             CompletePanel(){
                 super();
                 String[] columName = {"Id", "Дата Выплнения", "Цена", "Модель Часов"};
-                LinkedList<Complete> date = createElement(requset, typeTable);
+                LinkedList<Complete> date = createElementComplete(requset, typeTable);
                 String[][] completeDate = new String[date.size()][4];
 
                 for(int i = 0; i < date.size(); i++){
@@ -135,27 +140,33 @@ public class Main {
             }
         }
 
-        public static <Object> LinkedList<Object> createElement(String request, String typeTable) {
-            LinkedList<Object> date = new LinkedList<>();
+        public static LinkedList<Orders> createElementOrders(String request, String typeTable) {
+            LinkedList<Orders> date = new LinkedList<>();
             try (Connection conn = DriverManager.getConnection(BD_URL, LOGIN, PASSWORD)) {
                 Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
                 Statement statement = conn.createStatement();
                 ResultSet resultSet = statement.executeQuery(request);
                 while (resultSet.next()) {
-                    switch(typeTable){
-                        case "orders":
-                            date.add((Object) new Orders(resultSet.getInt("idOrder"),
-                                    resultSet.getString("Model"), resultSet.getInt("cost")));
-                            return date;
-                        case "complete":
-                            date.add((Object) new Complete(resultSet.getInt("idComplete"),
-                                    resultSet.getString("DateCompleted"), resultSet.getInt("Cost"),
-                                    resultSet.getString("ModelWatch")));
-                            return date;
-                    }
+                        date.add(new Orders(resultSet.getInt("idOrder"),
+                                resultSet.getString("Model"), resultSet.getInt("cost")));
                 }
-            } catch (Exception e){System.out.println("Ошибка подключения: " + e);}
-            return null;
+            }catch (Exception e){System.out.println("Ошибка подключения: " + e);}
+            return date;
+        }
+
+        public static LinkedList<Complete> createElementComplete(String request, String typeTable) {
+            LinkedList<Complete> date = new LinkedList<>();
+            try (Connection conn = DriverManager.getConnection(BD_URL, LOGIN, PASSWORD)) {
+                Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
+                Statement statement = conn.createStatement();
+                ResultSet resultSet = statement.executeQuery(request);
+                while (resultSet.next()) {
+                    date.add(new Complete(resultSet.getInt("idcomplete"),
+                            resultSet.getString("DateCompleted"), resultSet.getInt("Cost"),
+                            resultSet.getString("ModelWatch")));
+                }
+            }catch (Exception e){System.out.println("Ошибка подключения: " + e);}
+            return date;
         }
     }
 
